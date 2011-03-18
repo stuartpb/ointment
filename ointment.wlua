@@ -8,6 +8,7 @@ local iup = require "iuplua"
 -- Globals or what have you
 ------------------------------------------------------------------------------
 local ondc={}
+local onrc={}
 
 ------------------------------------------------------------------------------
 -- Local functions
@@ -57,9 +58,12 @@ local voltorb = iup.image{
     }
   }
 
+local dclabel=iup.label{title="When headphones are disconnected:"}
 local mutedc=iup.toggle{title="Mute volume", action=tog_tk(ondc,"mute")}
-local pausedc=iup.toggle{title="Pause anything that's playing", action=tog_tk(ondc,"pause")}
-local undorc=iup.toggle{title="Reverse this on reinsertion", action=tog_tk(ondc,"undo")}
+local pausedc=iup.toggle{title="Pause media", action=tog_tk(ondc,"pause")}
+local rclabel=iup.label{title="When headphones are reinserted:"}
+local unmuterc=iup.toggle{title="Unmute volume", action=tog_tk(onrc,"unmute")}
+local playrc=iup.toggle{title="Play media", action=tog_tk(onrc,"play")}
 
 local function indent(px,control)
   return iup.hbox{iup.fill{rastersize=px},control}
@@ -70,11 +74,13 @@ local hider=iup.button{title="Hide the ointment",expand="yes"}
 local dg = iup.dialog{
   title="Magic Ointment", icon=voltorb,
   tray = "YES", traytip =  "Magic Ointment", trayimage = voltorb;
-  iup.vbox{
-    iup.label{title="When headphones are unplugged:"},
+  iup.vbox{ngap="3x3", nmargin="3x3";
+    dclabel,
     indent(20,mutedc),
     indent(20,pausedc),
-    indent(20,undorc),
+    rclabel,
+    indent(20,unmuterc),
+    indent(20,playrc),
     hider
   }
 }
