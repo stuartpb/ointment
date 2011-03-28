@@ -125,8 +125,9 @@ user32.SetWindowLongA:types{abi="stdcall", ret="long";
   "int", --int nIndex
   "long", --LONG dwNewLong
 }
---todo: CallWindowProc (for deferring back to IUP's wndproc)
---      SendMessage (for sending the Pause message)
+--todo: RegisterDeviceNotification (currently nothing happens)
+--      CallWindowProc (for deferring back to IUP's wndproc)
+--      PostMessage (for sending the Pause message)
 
 
 local function make_wndproc(f)
