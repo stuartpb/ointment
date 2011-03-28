@@ -85,8 +85,6 @@ local dg = iup.dialog{
   }
 }
 
-dg:show()
-
 function hider:action()
   dg.hidetaskbar = "YES"
 end
@@ -113,12 +111,50 @@ end
 -- Device stuff
 ------------------------------------------------------------------------------
 
+-- Constants
+local GWLP_WNDPROC = -4
+local WM_DEVICECHANGE = 0x219
+local LONG_PTR = "long"
+local UINT = "int" --should be "uint" but Alien 0.41 doesn't have it
+local UINT_PTR = UINT
+
 local alien = require "alien"
 local user32 = alien.load 'user32.dll'
+user32.SetWindowLongA:types{abi="stdcall", ret="long";
+  "pointer", --HWND hWnd
+  "int", --int nIndex
+  "long", --LONG dwNewLong
+}
+--todo: CallWindowProc (for deferring back to IUP's wndproc)
+--      SendMessage (for sending the Pause message)
+
+
+local function make_wndproc(f)
+  return alien.callback(f,LONG_PTR,--LRESULT
+    "pointer", --HWND hwnd
+    UINT, --UINT uMsg
+    UINT_PTR, --WPARAM wParam
+    LONG_PTR --LPARAM lParam
+  )
+end
+
+local dchook = make_wndproc(
+  function (hWnd, uMsg, wParam, lParam)
+    if uMsg == WM_DEVICECHANGE then
+      iup.Message("WM_DEVICECHANGE",
+        string.format("0x%X",wParam))
+    end
+  end)
 
 ------------------------------------------------------------------------------
 -- Execution
 ------------------------------------------------------------------------------
+
+--Show the dialog
+dg:show()
+
+--Override its WNDPROC
+user32.SetWindowLongA(dg.hwnd,GWLP_WNDPROC,dchook)
 
 --Don't start the main loop if something's already started it
 if (iup.MainLoopLevel()==0) then
