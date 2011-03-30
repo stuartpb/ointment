@@ -3,6 +3,18 @@
 ------------------------------------------------------------------------------
 local iup = require "iuplua"
 
+--Magic Ointment modules
+--Platform-specific functionality.
+local platform; do
+  local driver = iup.GetGlobal"DRIVER"
+  if driver == "Win32" then
+    platform = require "mo-windows"
+  else
+    iup.Message("Platform not supported",
+      "Magic Ointment only comes with Windows support.")
+    os.exit()
+  end
+end
 
 ------------------------------------------------------------------------------
 -- Globals or what have you
@@ -96,7 +108,14 @@ function dg:show_cb(state)
   end
 end
 
-dg.trayclick_cb = function(self, b, press, dclick)
+function dg:map_cb()
+  --Register our window handle with the Windows stuff
+  --TODO: Send self.wid to platform instead?
+  --BUG: https://github.com/stuartpb/ointment/issues/#issue/1
+  platform.reg(self)
+end
+
+function dg:trayclick_cb(b, press, dclick)
   --if left or right clicked
   if (b == 1 or b == 3) and press then
     item_show = iup.item {title = "Show", action = function() dg:show() end}
@@ -108,56 +127,13 @@ dg.trayclick_cb = function(self, b, press, dclick)
 end
 
 ------------------------------------------------------------------------------
--- Device stuff
-------------------------------------------------------------------------------
-
--- Constants
-local GWLP_WNDPROC = -4
-local WM_DEVICECHANGE = 0x219
-local LONG_PTR = "long"
-local UINT = "int" --should be "uint" but Alien 0.41 doesn't have it
-local UINT_PTR = UINT
-
-local alien = require "alien"
-local user32 = alien.load 'user32.dll'
-user32.SetWindowLongA:types{abi="stdcall", ret="long";
-  "pointer", --HWND hWnd
-  "int", --int nIndex
-  "long", --LONG dwNewLong
-}
---todo: RegisterDeviceNotification (currently nothing happens)
---      CallWindowProc (for deferring back to IUP's wndproc)
---      PostMessage (for sending the Pause message)
-
-
-local function make_wndproc(f)
-  return alien.callback(f,LONG_PTR,--LRESULT
-    "pointer", --HWND hwnd
-    UINT, --UINT uMsg
-    UINT_PTR, --WPARAM wParam
-    LONG_PTR --LPARAM lParam
-  )
-end
-
-local dchook = make_wndproc(
-  function (hWnd, uMsg, wParam, lParam)
-    if uMsg == WM_DEVICECHANGE then
-      iup.Message("WM_DEVICECHANGE",
-        string.format("0x%X",wParam))
-    end
-  end)
-
-------------------------------------------------------------------------------
 -- Execution
 ------------------------------------------------------------------------------
 
 --Show the dialog
 dg:show()
 
---Override its WNDPROC
-user32.SetWindowLongA(dg.hwnd,GWLP_WNDPROC,dchook)
-
---Don't start the main loop if something's already started it
+--Start the main loop if it's not already running
 if (iup.MainLoopLevel()==0) then
   iup.MainLoop()
 end
