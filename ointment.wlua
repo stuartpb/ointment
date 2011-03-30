@@ -102,17 +102,18 @@ function hider:action()
 end
 
 function dg:show_cb(state)
-  if state==iup.HIDE then
+  if state==iup.SHOW then
+    --Register our window handle with the Windows stuff
+    --TODO: Send self.wid to platform instead?
+    --BUG: https://github.com/stuartpb/ointment/issues/#issue/1
+    platform.reg(self)
+  elseif state==iup.HIDE then
     --be a responsible citizen and don't pollute the tray
     self.tray = "NO"
   end
 end
 
 function dg:map_cb()
-  --Register our window handle with the Windows stuff
-  --TODO: Send self.wid to platform instead?
-  --BUG: https://github.com/stuartpb/ointment/issues/#issue/1
-  platform.reg(self)
 end
 
 function dg:trayclick_cb(b, press, dclick)
