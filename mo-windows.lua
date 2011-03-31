@@ -10,6 +10,7 @@ local user32 = alien.load 'user32.dll'
 
 -- Types
 local DWORD = "ulong"
+local BOOL = "int"
 local LONG = "long"
 local LONG_PTR = LONG --64-bit sensitive
 local LPARAM = LONG_PTR
@@ -26,7 +27,12 @@ local HDEVNOTIFY = PVOID
 
 -- Constants
 local GWLP_WNDPROC = -4
-local WM_DEVICECHANGE = 0x219
+local WM_DEVICECHANGE = 0x0219
+local HWND_BROADCAST = 0xffff
+local WM_APPCOMMAND = 0x0319
+local WM_COMMAND = 0x0111
+local APPCOMMAND_MEDIA_PAUSE = 47
+local APPCOMMAND_MEDIA_PLAY_PAUSE = 14
 local DEVICE_NOTIFY_WINDOW_HANDLE = 0x00000000
 local DEVICE_NOTIFY_ALL_INTERFACE_CLASSES = 0x00000004
 
@@ -58,7 +64,19 @@ user32.RegisterDeviceNotificationA:types{abi="stdcall", ret=HDEVNOTIFY;
   LPVOID, --LPVOID NotificationFilter
   DWORD --DWORD Flags
 }
---todo: PostMessage (for sending the Pause message)
+user32.PostMessageA:types{abi="stdcall", ret=BOOL;
+  HWND, --HWND hwnd
+  UINT, --UINT uMsg
+  WPARAM, --WPARAM wParam
+  LPARAM --LPARAM lParam
+}
+user32.SendMessageA:types{abi="stdcall", ret=LRESULT;
+  HWND, --HWND hwnd
+  UINT, --UINT uMsg
+  WPARAM, --WPARAM wParam
+  LPARAM --LPARAM lParam
+}
+--todo: GetLastError (am I getting denied?)
 
 
 ------------------------------------------------------------------------------
@@ -86,6 +104,9 @@ dchook = make_wndproc(
     if uMsg == WM_DEVICECHANGE then
       iup.Message("WM_DEVICECHANGE",
         string.format("0x%X",wParam))
+    elseif uMsg == WM_APPCOMMAND then
+      iup.Message("WM_APPCOMMAND",
+        string.format("0x%X",wParam))
 
     --Otherwise, defer to the WndProc this replaced
     else
@@ -101,13 +122,20 @@ local win={}
 
 function win.reg(dlg)
   --TODO: Register for device change events
-  --iup.Message("Wait a minute-","Wait- wait a minute")
 
   --Override the MO dialog's WNDPROC
   prevWndProc = user32.SetWindowLongA(
     dlg.hwnd, --for the MO dialog
     GWLP_WNDPROC, --set the WNDPROC
     dchook) --to the hook specified above
+end
+
+function win.pause()
+  user32.SendMessageA(
+    HWND_BROADCAST,
+    WM_APPCOMMAND,
+    0, APPCOMMAND_MEDIA_PAUSE
+  )
 end
 
 return win

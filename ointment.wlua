@@ -93,7 +93,7 @@ local dg = iup.dialog{
     rclabel,
     indent(20,unmuterc),
     indent(20,playrc),
-    hider
+    hider, --iup.button{title="Pause",action=platform.pause}
   }
 }
 
