@@ -105,7 +105,6 @@ function dg:show_cb(state)
   if state==iup.SHOW then
     --Register our window handle with the Windows stuff
     --TODO: Send self.wid to platform instead?
-    --BUG: https://github.com/stuartpb/ointment/issues/#issue/1
     platform.reg(self)
   elseif state==iup.HIDE then
     --be a responsible citizen and don't pollute the tray
