@@ -3,7 +3,15 @@
 ------------------------------------------------------------------------------
 local iup = require "iuplua"
 
---Magic Ointment modules
+--Local version comparison module
+local vercmp = require "vercmp"
+
+if vercmp.lt (iup._VERSION,"3.4") then
+  iup.Message("Insufficient version",
+    "Magic Ointment requires at least IUP 3.4 (earlier versions tend to crash).")
+  os.exit()
+end
+
 --Platform-specific functionality.
 local platform; do
   local driver = iup.GetGlobal"DRIVER"
