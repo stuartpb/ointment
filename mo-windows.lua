@@ -2,6 +2,7 @@
 -- Libraries
 ------------------------------------------------------------------------------
 local alien = require "alien"
+local iup = require "iuplua"
 
 ------------------------------------------------------------------------------
 -- FFI definitions
@@ -125,7 +126,7 @@ function win.reg(dlg)
 
   --Override the MO dialog's WNDPROC
   prevWndProc = user32.SetWindowLongA(
-    dlg.hwnd, --for the MO dialog
+    iup.GetAttributeData(dlg,"HWND"), --for the MO dialog
     GWLP_WNDPROC, --set the WNDPROC
     dchook) --to the hook specified above
 end
